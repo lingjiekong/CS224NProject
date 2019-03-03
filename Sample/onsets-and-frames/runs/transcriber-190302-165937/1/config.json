@@ -1,0 +1,17 @@
+{
+  "batch_size": 8,
+  "checkpoint_interval": 1000,
+  "clip_gradient_norm": 3,
+  "device": "cuda",
+  "iterations": 500000,
+  "learning_rate": 0.0006,
+  "learning_rate_decay_rate": 0.98,
+  "learning_rate_decay_steps": 10000,
+  "logdir": "runs/transcriber-190302-165937",
+  "model_complexity": 48,
+  "resume_iteration": null,
+  "seed": 212272887,
+  "sequence_length": 327680,
+  "validation_interval": 500,
+  "validation_length": 320000
+}

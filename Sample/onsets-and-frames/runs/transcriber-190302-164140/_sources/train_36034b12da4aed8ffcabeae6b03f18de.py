@@ -56,16 +56,13 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     writer = SummaryWriter(logdir)
 
     # dataset = MAESTRO(sequence_length=sequence_length)
-    # dataset = MAPS(groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'], 
-    #               sequence_length=sequence_length)
-    dataset = MAPS(groups=['AkPnBcht'], 
-                  sequence_length=sequence_length)
+    dataset = MAPS(path='/home/lab/Documents/datasets/MAPS',
+                   groups=['SptkBGCl', 'StbgTGd2'], sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
     # validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
-    # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
-    #                           sequence_length=validation_length)
-    validation_dataset = MAPS(groups=['SptkBGCl'],
+    validation_dataset = MAPS(path='/home/lab/Documents/datasets/MAPS',
+                              groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'],
                               sequence_length=validation_length)
 
     if resume_iteration is None:

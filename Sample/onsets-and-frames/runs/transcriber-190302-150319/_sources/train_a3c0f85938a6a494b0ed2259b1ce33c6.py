@@ -55,18 +55,10 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     os.makedirs(logdir, exist_ok=True)
     writer = SummaryWriter(logdir)
 
-    # dataset = MAESTRO(sequence_length=sequence_length)
-    # dataset = MAPS(groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'], 
-    #               sequence_length=sequence_length)
-    dataset = MAPS(groups=['AkPnBcht'], 
-                  sequence_length=sequence_length)
+    dataset = MAESTRO(sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    # validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
-    # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
-    #                           sequence_length=validation_length)
-    validation_dataset = MAPS(groups=['SptkBGCl'],
-                              sequence_length=validation_length)
+    validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
 
     if resume_iteration is None:
         model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity).to(device)
