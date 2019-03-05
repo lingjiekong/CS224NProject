@@ -1,0 +1,15 @@
+changes on CTC loss function
+# build on top of current
+- onset CTC (add separate network, good for training, quick backpropagate, add additinoal feature)
+- (feedback) CTC transducer (additinoal feature, assume at different time are conditionally dependent)
+- RNN only CTC (remove CNN layers)
+
+# rewrite loss function
+- dis-attention CTC (remove duplication, so no post-process is needed)
+- attention CTC (might have learn a language model). Problem attention size is changing
+
+
+-----------------
+1. onset and frame: encoder and decode attention
+2. onset and frame: highway gate
+3. ctc loss function
