@@ -100,9 +100,9 @@ class MelSpectrogram(torch.nn.Module):
 # the default melspectrogram converter across the project
 melspectrogram = MelSpectrogram(N_MELS, SAMPLE_RATE, WINDOW_LENGTH, HOP_LENGTH, mel_fmin=MEL_FMIN, mel_fmax=MEL_FMAX)
 
-if torch.cuda.device_count() > 1:
-  print("Let's use", torch.cuda.device_count(), "GPUs!")
-  # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-  melspectrogram = nn.DataParallel(melspectrogram)
+# if torch.cuda.device_count() > 1:
+#   print("Let's use", torch.cuda.device_count(), "GPUs!")
+#   # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+#   melspectrogram = torch.nn.DataParallel(melspectrogram)
   
 melspectrogram.to(DEFAULT_DEVICE)

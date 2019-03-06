@@ -20,14 +20,14 @@ ex = Experiment('train_transcriber')
 @ex.config
 def config():
     logdir = 'runs/transcriber-' + datetime.now().strftime('%y%m%d-%H%M%S')
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
     iterations = 500000
     resume_iteration = None
     checkpoint_interval = 1000
 
-    batch_size = 8
+    batch_size = 4
     sequence_length = 327680
-    model_complexity = 48
+    model_complexity = 16
 
     if torch.cuda.is_available() and torch.cuda.get_device_properties(torch.cuda.current_device()).total_memory < 10e9:
         batch_size //= 2
@@ -55,18 +55,18 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     os.makedirs(logdir, exist_ok=True)
     writer = SummaryWriter(logdir)
 
-    # dataset = MAESTRO(sequence_length=sequence_length)
+    dataset = MAESTRO(sequence_length=sequence_length)
     # dataset = MAPS(groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'], 
     #               sequence_length=sequence_length)
-    dataset = MAPS(groups=['AkPnBcht'], 
-                  sequence_length=sequence_length)
+    # dataset = MAPS(groups=['AkPnBcht'], 
+                  # sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    # validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
+    validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
     #                           sequence_length=validation_length)
-    validation_dataset = MAPS(groups=['SptkBGCl'],
-                              sequence_length=validation_length)
+    # validation_dataset = MAPS(groups=['SptkBGCl'],
+                              # sequence_length=validation_length)
 
     if resume_iteration is None:
         model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity).to(device)
@@ -103,7 +103,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
         if i % validation_interval == 0:
             model.eval()
             with torch.no_grad():
-                for key, value in evaluate(validation_dataset, model).items():
+                for key, value in evaluate(validation_dataset, model, save_path='eval_during_training').items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
             model.train()
 
