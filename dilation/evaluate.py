@@ -79,6 +79,17 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
         for key, loss in frame_metrics.items():
             metrics['metric/frame/' + key.lower().replace(' ', '_')].append(loss)
 
+        eval_training_output = 'eval_training_output.txt'
+        if os.path.exists(eval_training_output):
+            append_write = 'a'
+        else;
+            append_write = 'w'
+
+        for key, values in metrics.items():
+        if key.startswith('metric/'):
+            _, category, name = key.split('/')
+            print(f'{category:>32} {name:25}: {np.mean(values):.3f} ± {np.std(values):.3f}', file=open(eval_training_output, append_write))
+
         if save_path is not None:
             os.makedirs(save_path, exist_ok=True)
             label_path = os.path.join(save_path, os.path.basename(label['path']) + '.label.png')
