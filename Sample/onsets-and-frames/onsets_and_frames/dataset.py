@@ -135,8 +135,12 @@ class MAESTRO(PianoRollAudioDataset):
 
     def files(self, group):
         metadata = json.load(open(os.path.join(self.path, 'maestro-v1.0.0.json')))
+        # files = sorted([(os.path.join(self.path, row['audio_filename'].replace('.wav', '.flac')),
+        #                  os.path.join(self.path, row['midi_filename'])) for row in metadata if row['split'] == group])
+
+        # Mini dataset
         files = sorted([(os.path.join(self.path, row['audio_filename'].replace('.wav', '.flac')),
-                         os.path.join(self.path, row['midi_filename'])) for row in metadata if row['split'] == group])
+                         os.path.join(self.path, row['midi_filename'])) for row in metadata if (row['split'] == group and row['canonical_composer'] == 'Wolfgang Amadeus Mozart' )])
 
         files = [(audio if os.path.exists(audio) else audio.replace('.flac', '.wav'), midi) for audio, midi in files]
 

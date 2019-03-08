@@ -22,7 +22,7 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
 
     for label in data:
         mel = melspectrogram(label['audio'].reshape(-1, label['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
-        pred, losses = model.run_on_batch(label, mel)
+        pred, losses = model.module.run_on_batch(label, mel)
 
         for key, loss in losses.items():
             metrics[key].append(loss.item())
