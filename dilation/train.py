@@ -20,7 +20,7 @@ ex = Experiment('train_transcriber')
 @ex.config
 def config():
     logdir = 'runs/transcriber-' + datetime.now().strftime('%y%m%d-%H%M%S')
-    device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     iterations = 500000
     resume_iteration = None
     checkpoint_interval = 1000
@@ -55,16 +55,16 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     os.makedirs(logdir, exist_ok=True)
     writer = SummaryWriter(logdir)
 
-    dataset = MAESTRO(sequence_length=sequence_length)
-    # dataset = MAPS(groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'], 
-    #               sequence_length=sequence_length)
+    # dataset = MAESTRO(sequence_length=sequence_length)
+    dataset = MAPS(groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'], 
+                  sequence_length=sequence_length)
     # dataset = MAPS(groups=['AkPnBcht'], 
                   # sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
-    # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
-    #                           sequence_length=validation_length)
+    # validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
+    validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
+                              sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl'],
                               # sequence_length=validation_length)
 
@@ -103,7 +103,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
         if i % validation_interval == 0:
             model.eval()
             with torch.no_grad():
-                for key, value in evaluate(validation_dataset, model, save_path='eval_during_training').items():
+                for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
             model.train()
 
