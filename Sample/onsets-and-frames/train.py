@@ -64,7 +64,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     #               sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    iterations = len(dataset) * 500 / # make sure smaller datasets have less iterations
+    iterations = len(dataset) * 1000 / batch_size# make sure smaller datasets have less iterations
     print(iterations)
 
     validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
