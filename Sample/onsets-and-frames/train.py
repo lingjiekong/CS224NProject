@@ -20,15 +20,16 @@ ex = Experiment('train_transcriber')
 @ex.config
 def config():
     logdir = 'runs/transcriber-' + datetime.now().strftime('%y%m%d-%H%M%S')
-    logdir = 'runs/transcriber-190304-193700'
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    # logdir = 'runs/transcriber-190304-193700'
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
     iterations = 500000
-    resume_iteration = 472000 #None
+    resume_iteration = None
     checkpoint_interval = 1000
 
-    batch_size = 4
+    batch_size = 8
     sequence_length = 327680
-    model_complexity = 16 #48
+    model_complexity = 16
 
     if torch.cuda.is_available() and torch.cuda.get_device_properties(torch.cuda.current_device()).total_memory < 10e9:
         batch_size //= 2
@@ -63,6 +64,9 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     #               sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
+    iterations = len(dataset) * 500 / # make sure smaller datasets have less iterations
+    print(iterations)
+
     validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
                               # sequence_length=validation_length)
@@ -70,17 +74,10 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     #                           sequence_length=validation_length)
 
     if resume_iteration is None:
-        # single GPU
         model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity)
-
-        # if torch.cuda.device_count() > 1:
-        #     print("Using", torch.cuda.device_count(), "GPUs in train.py -> resume_iteration")
-        #     # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-        #     model = torch.nn.DataParallel(model)
-
+        if torch.cuda.device_count() > 1:
+            model = torch.nn.DataParallel(model, device_ids=[0, 2])
         model.to(device)
-
-
 
         optimizer = torch.optim.Adam(model.parameters(), learning_rate)
         resume_iteration = 0
@@ -98,7 +95,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
         scheduler.step()
 
         mel = melspectrogram(batch['audio'].reshape(-1, batch['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
-        predictions, losses = model.run_on_batch(batch, mel)
+        predictions, losses = model.module.run_on_batch(batch, mel)
 
         loss = sum(losses.values())
         optimizer.zero_grad()
