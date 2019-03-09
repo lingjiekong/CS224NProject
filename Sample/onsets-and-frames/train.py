@@ -90,6 +90,10 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     summary(model)
     scheduler = StepLR(optimizer, step_size=learning_rate_decay_steps, gamma=learning_rate_decay_rate)
 
+    hist_valid_scores = []
+    patience, num_trial = 0, 0
+    max_patience, max_trial = 0, 0 
+
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
     for i, batch in zip(loop, cycle(loader)):
         scheduler.step()
@@ -110,12 +114,31 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
             writer.add_scalar(key, value.item(), global_step=i)
 
         if i % validation_interval == 0:
+            print ("running validation\n")
             model.eval()
             with torch.no_grad():
+                count, values = 0.0, 0.0
                 for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
+                    count += 1.0
+                    values += np.mean(value)
+                dev_value = values/count
+            is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
+            hist_valid_scores.append(dev_value)
             model.train()
 
-        if i % checkpoint_interval == 0:
-            torch.save(model, os.path.join(logdir, f'model-{i}.pt'))
-            torch.save(optimizer.state_dict(), os.path.join(logdir, 'last-optimizer-state.pt'))
+            if is_better:
+                patience = 0
+                torch.save(model, os.path.join(logdir, f'model-{i}.pt'))
+                torch.save(optimizer.state_dict(), os.path.join(logdir, 'last-optimizer-state.pt'))
+            else:
+                patience += 1
+                print('hit patience %d' % patience, file=sys.stderr)
+                if patience == max_patience:
+                    num_trial += 1
+                    print('hit #%d trial' % num_trial, file=sys.stderr)
+                    if num_trial == max_trial:
+                        print('early stop!', file=sys.stderr)
+                        exit(0)
+                    # reset patience
+                    patience = 0
