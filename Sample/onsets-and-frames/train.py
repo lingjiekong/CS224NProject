@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+import sys
+import math
 
 import numpy as np
 from sacred import Experiment
@@ -19,9 +21,10 @@ ex = Experiment('train_transcriber')
 
 @ex.config
 def config():
-    # logdir = 'runs/transcriber-' + datetime.now().strftime('%y%m%d-%H%M%S')
-    logdir = 'runs/transcriber-190306-130609'
-    device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+    logdir = 'runs/transcriber-' + datetime.now().strftime('%y%m%d-%H%M%S')
+    # logdir = 'runs/transcriber-190304-193700'
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
     iterations = 500000
     resume_iteration = 434000
     checkpoint_interval = 1000
@@ -58,19 +61,29 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     dataset = MAESTRO(sequence_length=sequence_length)
     # dataset = MAPS(groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'], 
-    #               sequence_length=sequence_length)
-    # dataset = MAPS(groups=['AkPnBcht'], 
                   # sequence_length=sequence_length)
+    # dataset = MAPS(groups=['AkPnBcht'], 
+    #               sequence_length=sequence_length)
+
     loader = DataLoader(dataset, batch_size, shuffle=True)
+
+    iterations = math.ceil(len(dataset) * 1000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
+    print(iterations)
+
 
     validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
-    #                           sequence_length=validation_length)
-    # validation_dataset = MAPS(groups=['SptkBGCl'],
                               # sequence_length=validation_length)
+    # validation_dataset = MAPS(groups=['SptkBGCl'],
+    #                           sequence_length=validation_length)
+
 
     if resume_iteration is None:
-        model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity).to(device)
+        model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity)
+        if torch.cuda.device_count() > 1:
+            model = torch.nn.DataParallel(model, device_ids=[0, 2])
+        model.to(device)
+
         optimizer = torch.optim.Adam(model.parameters(), learning_rate)
         resume_iteration = 0
     else:
@@ -82,12 +95,16 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     summary(model)
     scheduler = StepLR(optimizer, step_size=learning_rate_decay_steps, gamma=learning_rate_decay_rate)
 
+    hist_valid_scores = []
+    patience, num_trial = 0, 0
+    max_patience, max_trial = 0, 0 
+
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
     for i, batch in zip(loop, cycle(loader)):
         scheduler.step()
 
         mel = melspectrogram(batch['audio'].reshape(-1, batch['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
-        predictions, losses = model.run_on_batch(batch, mel)
+        predictions, losses = model.module.run_on_batch(batch, mel)
 
         loss = sum(losses.values())
         optimizer.zero_grad()
@@ -102,12 +119,31 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
             writer.add_scalar(key, value.item(), global_step=i)
 
         if i % validation_interval == 0:
+            print ("running validation\n")
             model.eval()
             with torch.no_grad():
-                for key, value in evaluate(validation_dataset, model, save_path='eval_during_training').items():
+                count, values = 0.0, 0.0
+                for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
+                    count += 1.0
+                    values += np.mean(value)
+                dev_value = values/count
+            is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
+            hist_valid_scores.append(dev_value)
             model.train()
 
-        if i % checkpoint_interval == 0:
-            torch.save(model, os.path.join(logdir, f'model-{i}.pt'))
-            torch.save(optimizer.state_dict(), os.path.join(logdir, 'last-optimizer-state.pt'))
+            if is_better:
+                patience = 0
+                torch.save(model, os.path.join(logdir, f'model-{i}.pt'))
+                torch.save(optimizer.state_dict(), os.path.join(logdir, 'last-optimizer-state.pt'))
+            else:
+                patience += 1
+                print('hit patience %d' % patience, file=sys.stderr)
+                if patience == max_patience:
+                    num_trial += 1
+                    print('hit #%d trial' % num_trial, file=sys.stderr)
+                    if num_trial == max_trial:
+                        print('early stop!', file=sys.stderr)
+                        exit(0)
+                    # reset patience
+                    patience = 0

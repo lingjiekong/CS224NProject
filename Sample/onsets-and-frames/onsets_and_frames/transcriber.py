@@ -63,11 +63,21 @@ class ConvStack(nn.Module):
 
     def forward(self, mel):
         x = mel.view(mel.size(0), 1, mel.size(1), mel.size(2))
+        # print("Before cnn", end=" ")
+        # print(x.size())
+        
         x = self.cnn(x)
+
         dilation = self.cnn_dialation1(x) + self.cnn_dialation2(x) + self.cnn_dialation3(x)
         x = self.post(dilation)
+
         x = x.transpose(1, 2).flatten(-2)
+        # print("Before fc", end=" ")
+        # print(x.size())
+        
         x = self.fc(x)
+        # print("After fc", end=" ")
+        # print(x.size())
         return x
 
 
@@ -106,12 +116,33 @@ class OnsetsAndFrames(nn.Module):
         )
 
     def forward(self, mel):
+
         onset_pred = self.onset_stack(mel)
         offset_pred = self.offset_stack(mel)
         activation_pred = self.frame_stack(mel)
         combined_pred = torch.cat([onset_pred.detach(), offset_pred.detach(), activation_pred], dim=-1)
         frame_pred = self.combined_stack(combined_pred)
         velocity_pred = self.velocity_stack(mel)
+        # print("###############################")
+        
+        # print("onset_pred:      ", end = " ")
+        # print(onset_pred.size())
+
+        # print("offset_pred:     ", end = " ")
+        # print(offset_pred.size())
+
+        # print("activation_pred: ", end = " ")
+        # print(activation_pred.size())
+
+        # print("combined_pred:   ", end = " ")
+        # print(combined_pred.size())
+
+        # print("frame_pred:      ", end = " ")
+        # print(frame_pred.size())
+
+        # print("velocity_pred:   ", end = " ")
+        # print(velocity_pred.size())
+
         return onset_pred, offset_pred, activation_pred, frame_pred, velocity_pred
 
     def run_on_batch(self, batch, mel):
