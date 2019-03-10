@@ -1,6 +1,5 @@
 """
 A rough translation of Magenta's Onsets and Frames implementation [1].
-
     [1] https://github.com/tensorflow/magenta/blob/master/magenta/onsets_and_frames/onsets_frames_transcription/onsets_and_frames.py
 """
 
@@ -9,6 +8,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from .lstm import BiLSTM
+from .lstmA import BiLSTMA
 
 
 class ConvStack(nn.Module):
@@ -42,20 +42,9 @@ class ConvStack(nn.Module):
 
     def forward(self, mel):
         x = mel.view(mel.size(0), 1, mel.size(1), mel.size(2))
-        # print("Before cnn", end=" ")
-        # print(x.size())
-        
         x = self.cnn(x)
-        # print("After cnn", end=" ")
-        # print(x.size())
-
         x = x.transpose(1, 2).flatten(-2)
-        # print("Before fc", end=" ")
-        # print(x.size())
-        
         x = self.fc(x)
-        # print("After fc", end=" ")
-        # print(x.size())
         return x
 
 
@@ -65,17 +54,21 @@ class OnsetsAndFrames(nn.Module):
 
         fc_size = model_complexity * 16
         lstm_units = model_complexity * 8
-
+        
+        # change the nn.Linear(lstm_units * 2, output_features) --> nn.Linear(lstm_units * 4, output_features) since uses attention on onset
+        # also use BiLSTMA instead of BiLSTM
         self.onset_stack = nn.Sequential(
             ConvStack(input_features, fc_size),
-            BiLSTM(fc_size, lstm_units),
-            nn.Linear(lstm_units * 2, output_features),
+            BiLSTMA(fc_size, lstm_units),
+            nn.Linear(lstm_units * 4, output_features),
             nn.Sigmoid()
         )
+        # change the nn.Linear(lstm_units * 2, output_features) --> nn.Linear(lstm_units * 4, output_features) since uses attention on onset
+        # also use BiLSTMA instead of BiLSTM
         self.offset_stack = nn.Sequential(
             ConvStack(input_features, fc_size),
-            BiLSTM(fc_size, lstm_units),
-            nn.Linear(lstm_units * 2, output_features),
+            BiLSTMA(fc_size, lstm_units),
+            nn.Linear(lstm_units * 4, output_features),
             nn.Sigmoid()
         )
         self.frame_stack = nn.Sequential(
@@ -94,33 +87,12 @@ class OnsetsAndFrames(nn.Module):
         )
 
     def forward(self, mel):
-
         onset_pred = self.onset_stack(mel)
         offset_pred = self.offset_stack(mel)
         activation_pred = self.frame_stack(mel)
         combined_pred = torch.cat([onset_pred.detach(), offset_pred.detach(), activation_pred], dim=-1)
         frame_pred = self.combined_stack(combined_pred)
         velocity_pred = self.velocity_stack(mel)
-        # print("###############################")
-        
-        # print("onset_pred:      ", end = " ")
-        # print(onset_pred.size())
-
-        # print("offset_pred:     ", end = " ")
-        # print(offset_pred.size())
-
-        # print("activation_pred: ", end = " ")
-        # print(activation_pred.size())
-
-        # print("combined_pred:   ", end = " ")
-        # print(combined_pred.size())
-
-        # print("frame_pred:      ", end = " ")
-        # print(frame_pred.size())
-
-        # print("velocity_pred:   ", end = " ")
-        # print(velocity_pred.size())
-
         return onset_pred, offset_pred, activation_pred, frame_pred, velocity_pred
 
     def run_on_batch(self, batch, mel):
@@ -154,4 +126,3 @@ class OnsetsAndFrames(nn.Module):
             return denominator
         else:
             return (onset_label * (velocity_label - velocity_pred) ** 2).sum() / denominator
-
