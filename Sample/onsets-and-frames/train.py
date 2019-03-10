@@ -26,10 +26,10 @@ def config():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     iterations = 500000
-    resume_iteration = 434000
+    resume_iteration = None
     checkpoint_interval = 1000
 
-    batch_size = 4
+    batch_size = 8
     sequence_length = 327680
     model_complexity = 16
 
@@ -67,8 +67,8 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    iterations = math.ceil(len(dataset) * 1000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
-    print(iterations)
+    # iterations = math.ceil(len(dataset) * 1000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
+    # print(iterations)
 
 
     validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
@@ -97,7 +97,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     hist_valid_scores = []
     patience, num_trial = 0, 0
-    max_patience, max_trial = 0, 0 
+    max_patience, max_trial = 5, 5 
 
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
     for i, batch in zip(loop, cycle(loader)):
