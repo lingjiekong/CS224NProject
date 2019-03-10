@@ -101,7 +101,6 @@ class MelSpectrogram(torch.nn.Module):
 melspectrogram = MelSpectrogram(N_MELS, SAMPLE_RATE, WINDOW_LENGTH, HOP_LENGTH, mel_fmin=MEL_FMIN, mel_fmax=MEL_FMAX)
 
 if torch.cuda.device_count() > 1:
-  print("Using", torch.cuda.device_count(), "GPUs in mel.py")
   melspectrogram = torch.nn.DataParallel(melspectrogram, device_ids=[0, 2])
   
 melspectrogram.to(DEFAULT_DEVICE)

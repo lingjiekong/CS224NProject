@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+import sys
+import math
 
 import numpy as np
 from sacred import Experiment
@@ -64,7 +66,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     #               sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    iterations = len(dataset) * 1000 / batch_size# make sure smaller datasets have less iterations
+    iterations = math.ceil(len(dataset) * 1000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
     print(iterations)
 
     validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
