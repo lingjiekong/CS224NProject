@@ -38,4 +38,4 @@ class BiLSTM(nn.Module):
                     result, (h, c) = self.rnn(x[:, start:end, :], (h, c))
                     output[:, start:end, hidden_size:] = result[:, :, hidden_size:]
             
-                        return output
+            return output
