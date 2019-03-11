@@ -105,8 +105,8 @@ class OnsetsAndFrames(nn.Module):
         predictions = {
             # 'onset': onset_pred.reshape(*onset_label.shape),
             # 'offset': offset_pred.reshape(*offset_label.shape),
-            'onset_time': onset_pred.reshape(*onset_label_time.shape),
-            'offset_time': offset_pred.reshape(*offset_label_time.shape),
+            'onset_time': onset_pred.reshape(*onset_time_label.shape),
+            'offset_time': offset_pred.reshape(*offset_time_label.shape),
             'frame': frame_pred.reshape(*frame_label.shape),
             'velocity': velocity_pred.reshape(*velocity_label.shape)
         }
