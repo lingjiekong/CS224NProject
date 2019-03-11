@@ -115,7 +115,7 @@ class OnsetsAndFrames(nn.Module):
             # 'loss/onset': F.binary_cross_entropy(predictions['onset'], onset_label),
             # 'loss/offset': F.binary_cross_entropy(predictions['offset'], offset_label),
             'loss/onset_time': F.onset_time_loss(predictions['onset_time'], onset_time_label, onset_label),
-            'loss/offset_time': F.offset_time_loss(predictions['offset'], offset_time_label, offset_label),
+            'loss/offset_time': F.offset_time_loss(predictions['offset_time'], offset_time_label, offset_label),
             'loss/frame': F.binary_cross_entropy(predictions['frame'], frame_label),
             'loss/velocity': self.velocity_loss(predictions['velocity'], velocity_label, onset_label)
         }
