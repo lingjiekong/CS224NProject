@@ -116,6 +116,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                 clip_grad_norm_([parameter], clip_gradient_norm)
 
         for key, value in {'loss': loss, **losses}.items():
+            
             writer.add_scalar(key, value.item(), global_step=i)
 
         if i % validation_interval == 0:
@@ -128,6 +129,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                     count += 1.0
                     values += np.mean(value)
                 dev_value = values/count
+                print('training loss: %.8f;  validation loss: %.8f' % (loss[0], dev_value))
             is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
             hist_valid_scores.append(dev_value)
             model.train()
