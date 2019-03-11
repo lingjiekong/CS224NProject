@@ -78,7 +78,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
         optimizer = torch.optim.Adam(model.parameters(), learning_rate)
         optimizer.load_state_dict(torch.load(os.path.join(logdir, 'last-optimizer-state.pt')))
 
-    summary(model)
+    # summary(model)
     scheduler = StepLR(optimizer, step_size=learning_rate_decay_steps, gamma=learning_rate_decay_rate)
 
     hist_valid_scores = []
