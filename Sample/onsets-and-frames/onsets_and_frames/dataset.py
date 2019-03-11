@@ -92,10 +92,16 @@ class PianoRollAudioDataset(Dataset):
 
             velocity: torch.ByteTensor, shape = [num_steps, midi_bins]
                 a matrix that contains MIDI velocity values at the frame locations
+
+            onset_time:
+
+            offset_time:
+
+            
         """
         saved_data_path = audio_path.replace('.flac', '.pt').replace('.wav', '.pt')
-        if os.path.exists(saved_data_path):
-            return torch.load(saved_data_path)
+        # if os.path.exists(saved_data_path):
+        #     return torch.load(saved_data_path)
 
         audio, sr = soundfile.read(audio_path, dtype='int16')
         assert sr == SAMPLE_RATE
