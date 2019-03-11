@@ -83,7 +83,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     hist_valid_scores = []
     patience, num_trial = 0, 0
-    max_patience, max_trial = 0, 0 
+    max_patience, max_trial = 5, 5 
 
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
     for i, batch in zip(loop, cycle(loader)):
