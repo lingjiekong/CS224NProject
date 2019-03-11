@@ -15,6 +15,7 @@ class BiLSTM(nn.Module):
         else:
             # evaluation mode: support for longer sequences that do not fit in memory
             batch_size, sequence_length, input_features = x.shape
+            # print(x.shape)
             hidden_size = self.rnn.hidden_size
             num_directions = 2 if self.rnn.bidirectional else 1
             

@@ -30,18 +30,20 @@ class BiLSTMA(nn.Module):
             #  (batch, len, recurrent_features) * (batch, 2 * recurrent_features,len) --> (batch, len,len)
             attention_matrix = torch.bmm( hidden_states_proj1, hidden_transpose)
             # apply softmax 
-            attention_score_matrix = F.softmax(attention_matrix)
+            attention_score_matrix = F.softmax(attention_matrix, -1)
             # (batch, 2 * recurrent_features,len) * (batch, len,len) -- > (batch,2 * recurrent_features,len)
             new_hidden_matrix_t = torch.bmm(hidden_transpose, torch.transpose(attention_score_matrix,1,2))
             # want (batch,len, 2 * recurrent_features) --> transpose
             new_hidden_matrix = torch.transpose(new_hidden_matrix_t,1,2)
-            # residual connection: (batch,len, 2 * recurrent_features)  cat  (batch,len, 2 * recurrent_features)
+            # residual connection: (batch,len, 2 * rsecurrent_features)  cat  (batch,len, 2 * recurrent_features)
             final_hidden_matrix = torch.cat((new_hidden_matrix,hidden_states),2)
+            
             return final_hidden_matrix
             
         else:
             # evaluation mode: support for longer sequences that do not fit in memory
             batch_size, sequence_length, input_features = x.shape
+            # print(x.shape)
             hidden_size = self.rnn.hidden_size
             num_directions = 2 if self.rnn.bidirectional else 1
 
