@@ -43,16 +43,22 @@ class PianoRollAudioDataset(Dataset):
             result['audio'] = data['audio'][begin:end].to(self.device)
             result['label'] = data['label'][step_begin:step_end, :].to(self.device)
             result['velocity'] = data['velocity'][step_begin:step_end, :].to(self.device)
+            result['onset_time'] = data['onset_time'][step_begin:step_end, :].to(self.device)
+            result['offset_time'] = data['offset_time'][step_begin:step_end, :].to(self.device)
         else:
             result['audio'] = data['audio'].to(self.device)
             result['label'] = data['label'].to(self.device)
             result['velocity'] = data['velocity'].to(self.device).float()
+            result['onset_time'] = data['onset_time'].to(self.device).float()
+            result['offset_time'] = data['offset_time'].to(self.device).float()
 
         result['audio'] = result['audio'].float().div_(32768.0)
         result['onset'] = (result['label'] == 3).float()
         result['offset'] = (result['label'] == 1).float()
         result['frame'] = (result['label'] > 1).float()
         result['velocity'] = result['velocity'].float().div_(128.0)
+        result['onset_time'] = result['onset_time'].float()
+        result['offset_time'] = result['offset_time'].float()
 
         return result
 
@@ -102,6 +108,8 @@ class PianoRollAudioDataset(Dataset):
 
         label = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
         velocity = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
+        onset_time = torch.zeros(n_steps, n_keys, dtype=torch.float)
+        offset_time = torch.zeros(n_steps, n_keys, dtype=torch.float)
 
         tsv_path = tsv_path
         midi = np.loadtxt(tsv_path, delimiter='\t', skiprows=1)
@@ -118,14 +126,16 @@ class PianoRollAudioDataset(Dataset):
             label[onset_right:frame_right, f] = 2
             label[frame_right:offset_right, f] = 1
             velocity[left:frame_right, f] = vel
+            onset_time[left:frame_right, f] = onset
+            offset_time[left:frame_right, f] = offset
 
-        data = dict(path=audio_path, audio=audio, label=label, velocity=velocity)
+        data = dict(path=audio_path, audio=audio, label=label, velocity=velocity, onset_time=onset_time, offset_time=offset_time)
         torch.save(data, saved_data_path)
         return data
 
 
 class MAESTRO(PianoRollAudioDataset):
-    
+
     def __init__(self, path='/home/lab/Documents/CS224NProject/Sample/onsets-and-frames/data/MAESTRO', groups=None, sequence_length=None, seed=42, device=DEFAULT_DEVICE):
         super().__init__(path, groups if groups is not None else ['train'], sequence_length, seed, device)
 

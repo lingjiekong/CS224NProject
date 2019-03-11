@@ -59,13 +59,13 @@ class OnsetsAndFrames(nn.Module):
             ConvStack(input_features, fc_size),
             BiLSTM(fc_size, lstm_units),
             nn.Linear(lstm_units * 2, output_features),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
         self.offset_stack = nn.Sequential(
             ConvStack(input_features, fc_size),
             BiLSTM(fc_size, lstm_units),
             nn.Linear(lstm_units * 2, output_features),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
         self.frame_stack = nn.Sequential(
             ConvStack(input_features, fc_size),
@@ -95,26 +95,47 @@ class OnsetsAndFrames(nn.Module):
         audio_label = batch['audio']
         onset_label = batch['onset']
         offset_label = batch['offset']
+        onset_time_label = batch['onset_time']
+        offset_time_label = batch['offset_time']
         frame_label = batch['frame']
         velocity_label = batch['velocity']
 
         onset_pred, offset_pred, _, frame_pred, velocity_pred = self(mel)
 
         predictions = {
-            'onset': onset_pred.reshape(*onset_label.shape),
-            'offset': offset_pred.reshape(*offset_label.shape),
+            # 'onset': onset_pred.reshape(*onset_label.shape),
+            # 'offset': offset_pred.reshape(*offset_label.shape),
+            'onset_time': onset_pred.reshape(*onset_label_time.shape),
+            'offset_time': offset_pred.reshape(*offset_label_time.shape),
             'frame': frame_pred.reshape(*frame_label.shape),
             'velocity': velocity_pred.reshape(*velocity_label.shape)
         }
 
         losses = {
-            'loss/onset': F.binary_cross_entropy(predictions['onset'], onset_label),
-            'loss/offset': F.binary_cross_entropy(predictions['offset'], offset_label),
+            # 'loss/onset': F.binary_cross_entropy(predictions['onset'], onset_label),
+            # 'loss/offset': F.binary_cross_entropy(predictions['offset'], offset_label),
+            'loss/onset_time': F.onset_time_loss(predictions['onset_time'], onset_time_label, onset_label),
+            'loss/offset_time': F.offset_time_loss(predictions['offset'], offset_time_label, offset_label),
             'loss/frame': F.binary_cross_entropy(predictions['frame'], frame_label),
             'loss/velocity': self.velocity_loss(predictions['velocity'], velocity_label, onset_label)
         }
 
         return predictions, losses
+
+    def onset_time_loss(self, onset_pred_time, onset_label_time, onset_label):
+        denominator = onset_label.sum()
+        if denominator.item() == 0:
+            return denominator
+        else:
+            return (onset_label * (onset_label_time - onset_pred_time) ** 2).sum() / denominator
+
+    def offset_time_loss(self, offset_pred_time, offset_label_time, offset_label):
+        denominator = offset_label.sum()
+        if denominator.item() == 0:
+            return denominator
+        else:
+            return (offset_label * (offset_label_time - offset_pred_time) ** 2).sum() / denominator
+
 
     def velocity_loss(self, velocity_pred, velocity_label, onset_label):
         denominator = onset_label.sum()
