@@ -97,7 +97,7 @@ class PianoRollAudioDataset(Dataset):
 
             offset_time:
 
-            
+
         """
         saved_data_path = audio_path.replace('.flac', '.pt').replace('.wav', '.pt')
         # if os.path.exists(saved_data_path):
@@ -136,7 +136,6 @@ class PianoRollAudioDataset(Dataset):
             offset_time[left:frame_right, f] = offset
 
         data = dict(path=audio_path, audio=audio, label=label, velocity=velocity, onset_time=onset_time, offset_time=offset_time)
-        print (data)
         torch.save(data, saved_data_path)
         return data
 
