@@ -50,6 +50,35 @@ def extract_notes(onsets, frames, velocity, onset_threshold=0.5, frame_threshold
 
     return np.array(pitches), np.array(intervals), np.array(velocities)
 
+# def extract_notes_time(onset_times, offset_times, frames, velocity, frame_threshold=0.5):
+#     frames = (frames > frame_threshold).cpu()
+#     onset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == 1
+#     offset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == -1
+
+#     pitches = []
+#     intervals = []
+#     velocities = []
+
+#     frames_onset = []
+#     pitches_onset = []
+#     for nonzero_onset in onset_diff.nonzero():
+#         frames_onset.append(nonzero_onset[0].item())
+#         pitches_onset.append(nonzero_onset[1].item())
+
+#     frames_offset = []
+#     pitches_offset = []
+#     for nonzero_offset in offset_diff.nonzero():
+#         frames_offset.append(nonzero_offset[0].item())
+#         pitches_offset.append(nonzero_offset[1].item())
+
+    
+
+
+
+
+
+
+
 
 def notes_to_frames(pitches, intervals, shape):
     """

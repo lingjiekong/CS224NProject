@@ -120,6 +120,12 @@ class PianoRollAudioDataset(Dataset):
         tsv_path = tsv_path
         midi = np.loadtxt(tsv_path, delimiter='\t', skiprows=1)
 
+        #############################
+        # time interval for l2 loss #
+        #############################
+        interval = self.sequence_length // HOP_LENGTH # 640 for train and 625 for test
+        time_interval = interval*HOP_LENGTH/SAMPLE_RATE
+
         for onset, offset, note, vel in midi:
             left = int(round(onset * SAMPLE_RATE / HOP_LENGTH))
             onset_right = min(n_steps, left + HOPS_IN_ONSET)
@@ -132,8 +138,8 @@ class PianoRollAudioDataset(Dataset):
             label[onset_right:frame_right, f] = 2
             label[frame_right:offset_right, f] = 1
             velocity[left:frame_right, f] = vel
-            onset_time[left:frame_right, f] = onset
-            offset_time[left:frame_right, f] = offset
+            onset_time[left:frame_right, f] = onset%time_interval
+            offset_time[left:frame_right, f] = offset%time_interval
 
         data = dict(path=audio_path, audio=audio, label=label, velocity=velocity, onset_time=onset_time, offset_time=offset_time)
         torch.save(data, saved_data_path)

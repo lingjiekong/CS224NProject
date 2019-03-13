@@ -111,8 +111,9 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                 count, values = 0.0, 0.0
                 for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
-                    count += 1.0
-                    values += np.mean(value)
+                    if key == 'metric/note-with-offsets-and-velocity/f1':
+                        count += 1.0
+                        values += np.mean(value)
                 dev_value = values/count
             is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
             hist_valid_scores.append(dev_value)

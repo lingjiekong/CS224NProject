@@ -32,6 +32,7 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
 
         p_ref, i_ref, v_ref = extract_notes(label['onset'], label['frame'], label['velocity'])
         p_est, i_est, v_est = extract_notes(pred['onset'], pred['frame'], pred['velocity'], onset_threshold, frame_threshold)
+        # p_est, i_est, v_est = extract_notes_time(pred['onset_time'], pred['offset_time'], pred['frame'], pred['velocity'], frame_threshold)
 
         t_ref, f_ref = notes_to_frames(p_ref, i_ref, label['frame'].shape)
         t_est, f_est = notes_to_frames(p_est, i_est, pred['frame'].shape)
