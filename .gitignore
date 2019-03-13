@@ -1,6 +1,6 @@
 # ignore data
 Sample/onsets-and-frames/data
-Sample/onsets-and-frames/run
+Sample/onsets-and-frames/runs
 Sample/onsets-and-frames/__pycache__/
 Sample/onsets-and-frames/onsets_and_frames/__pycache__/
 

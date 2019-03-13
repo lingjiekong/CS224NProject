@@ -1,0 +1,33 @@
+ ref_matched_velocities)[0]
+100%|██████████████████████████████████████████████████████████████████████| 125/125 [21:39<00:00, 21.27s/it]
+                            note precision                : 0.993 ± 0.005
+                            note recall                   : 0.838 ± 0.068
+                            note f1                       : 0.908 ± 0.042
+                            note overlap                  : 0.838 ± 0.038
+               note-with-offsets precision                : 0.820 ± 0.066
+               note-with-offsets recall                   : 0.694 ± 0.092
+               note-with-offsets f1                       : 0.750 ± 0.079
+               note-with-offsets overlap                  : 0.935 ± 0.036
+              note-with-velocity precision                : 0.971 ± 0.017
+              note-with-velocity recall                   : 0.820 ± 0.076
+              note-with-velocity f1                       : 0.888 ± 0.052
+              note-with-velocity overlap                  : 0.841 ± 0.037
+  note-with-offsets-and-velocity precision                : 0.806 ± 0.069
+  note-with-offsets-and-velocity recall                   : 0.682 ± 0.096
+  note-with-offsets-and-velocity f1                       : 0.738 ± 0.083
+  note-with-offsets-and-velocity overlap                  : 0.935 ± 0.036
+                           frame f1                       : 0.888 ± 0.000
+                           frame precision                : 0.931 ± 0.026
+                           frame recall                   : 0.822 ± 0.049
+                           frame accuracy                 : 0.775 ± 0.049
+                           frame substitution_error       : 0.019 ± 0.007
+                           frame miss_error               : 0.159 ± 0.046
+                           frame false_alarm_error        : 0.042 ± 0.020
+                           frame total_error              : 0.220 ± 0.050
+                           frame chroma_precision         : 0.938 ± 0.024
+                           frame chroma_recall            : 0.827 ± 0.048
+                           frame chroma_accuracy          : 0.784 ± 0.048
+                           frame chroma_substitution_error: 0.013 ± 0.005
+                           frame chroma_miss_error        : 0.159 ± 0.046
+                           frame chroma_false_alarm_error : 0.042 ± 0.020
+                           frame chroma_total_error       : 0.215 ± 0.049

@@ -64,16 +64,19 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                   # sequence_length=sequence_length)
     # dataset = MAPS(groups=['AkPnBcht'], 
     #               sequence_length=sequence_length)
+
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
     iterations = math.ceil(len(dataset) * 1000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
-    print(iterations)
+    # print(iterations)
+
 
     validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
                               # sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl'],
     #                           sequence_length=validation_length)
+
 
     if resume_iteration is None:
         model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity)
@@ -94,7 +97,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     hist_valid_scores = []
     patience, num_trial = 0, 0
-    max_patience, max_trial = 0, 0 
+    max_patience, max_trial = 10, 10 
 
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
     for i, batch in zip(loop, cycle(loader)):
@@ -113,6 +116,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                 clip_grad_norm_([parameter], clip_gradient_norm)
 
         for key, value in {'loss': loss, **losses}.items():
+            
             writer.add_scalar(key, value.item(), global_step=i)
 
         if i % validation_interval == 0:
@@ -122,9 +126,12 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                 count, values = 0.0, 0.0
                 for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
-                    count += 1.0
-                    values += np.mean(value)
+                    if (key == 'metric/note-with-offsets-and-velocity/f1'):
+                        # dev_value = np.mean(value)
+                    	count += 1.0
+                    	values += np.mean(value)
                 dev_value = values/count
+                print('training loss: %.8f;  validation accuracy: %.8f' % (loss[0], dev_value))
             is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
             hist_valid_scores.append(dev_value)
             model.train()
@@ -141,6 +148,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                     print('hit #%d trial' % num_trial, file=sys.stderr)
                     if num_trial == max_trial:
                         print('early stop!', file=sys.stderr)
-                        exit(0)
+                        # exit(0)
+                        break
                     # reset patience
                     patience = 0

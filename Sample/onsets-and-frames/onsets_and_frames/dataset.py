@@ -15,6 +15,7 @@ from .midi import parse_midi
 class PianoRollAudioDataset(Dataset):
     def __init__(self, path, groups=None, sequence_length=None, seed=42, device=DEFAULT_DEVICE):
         self.path = path
+        # self.path = os.path.abspath()
         self.groups = groups if groups is not None else self.available_groups()
         assert all(group in self.available_groups() for group in self.groups)
         self.sequence_length = sequence_length
@@ -126,7 +127,7 @@ class PianoRollAudioDataset(Dataset):
 
 class MAESTRO(PianoRollAudioDataset):
 
-    def __init__(self, path='data/MAESTRO', groups=None, sequence_length=None, seed=42, device=DEFAULT_DEVICE):
+    def __init__(self, path='/home/lab/Documents/CS224NProject/Sample/onsets-and-frames/data/MAESTRO', groups=None, sequence_length=None, seed=42, device=DEFAULT_DEVICE):
         super().__init__(path, groups if groups is not None else ['train'], sequence_length, seed, device)
 
     @classmethod
@@ -134,14 +135,15 @@ class MAESTRO(PianoRollAudioDataset):
         return ['train', 'validation', 'test']
 
     def files(self, group):
-        metadata = json.load(open(os.path.join(self.path, 'maestro-v1.0.0.json')))
-        # files = sorted([(os.path.join(self.path, row['audio_filename'].replace('.wav', '.flac')),
-        #                  os.path.join(self.path, row['midi_filename'])) for row in metadata if row['split'] == group])
+        metadata = json.load(open(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', 'maestro-v1.0.0.json')))
+        # files = sorted([(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['audio_filename'].replace('.wav', '.flac')),
+        #                  os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['midi_filename'])) 
+        #                                         for row in metadata if (row['split'] == group and row['canonical_composer'] == 'Wolfgang Amadeus Mozart') ])
+        downsize_factor = 2
 
-        # Mini dataset
-        files = sorted([(os.path.join(self.path, row['audio_filename'].replace('.wav', '.flac')),
-                         os.path.join(self.path, row['midi_filename'])) for row in metadata if (row['split'] == group and row['canonical_composer'] == 'Wolfgang Amadeus Mozart' )])
-
+        files = sorted([(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['audio_filename'].replace('.wav', '.flac')),
+                         os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['midi_filename'])) 
+                            for ii, row in enumerate(metadata) if (row['split'] == group and ii % downsize_factor == 0)])
         files = [(audio if os.path.exists(audio) else audio.replace('.flac', '.wav'), midi) for audio, midi in files]
 
         result = []
@@ -163,7 +165,7 @@ class MAPS(PianoRollAudioDataset):
         return ['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm', 'SptkBGCl', 'StbgTGd2']
 
     def files(self, group):
-        flacs = glob(os.path.join(self.path, 'flac', '*_%s.flac' % group))
+        flacs = glob(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAPS', 'flac', '*_%s.flac' % group))
         tsvs = [f.replace('/flac/', '/tsv/matched/').replace('.flac', '.tsv') for f in flacs]
 
         assert(all(os.path.isfile(flac) for flac in flacs))
