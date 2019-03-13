@@ -30,18 +30,21 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
         for key, value in pred.items():
             value.squeeze_(0).relu_()
 
-        p_ref, i_ref, v_ref = extract_notes(label['onset'], label['frame'], label['velocity'])
-        p_est, i_est, v_est = extract_notes(pred['onset'], pred['frame'], pred['velocity'], onset_threshold, frame_threshold)
-        # p_est, i_est, v_est = extract_notes_time(pred['onset_time'], pred['offset_time'], pred['frame'], pred['velocity'], frame_threshold)
+        # p_ref, i_ref, v_ref = extract_notes(label['onset'], label['frame'], label['velocity'])
+        # p_est, i_est, v_est = extract_notes(pred['onset'], pred['frame'], pred['velocity'], onset_threshold, frame_threshold)
+        p_ref, i_ref, v_ref = extract_notes_time(label['onset_time'], label['offset_time'], label['frame'], label['velocity'])
+        p_est, i_est, v_est = extract_notes_time(pred['onset_time'], pred['offset_time'], pred['frame'], pred['velocity'], frame_threshold)
 
         t_ref, f_ref = notes_to_frames(p_ref, i_ref, label['frame'].shape)
         t_est, f_est = notes_to_frames(p_est, i_est, pred['frame'].shape)
 
         scaling = HOP_LENGTH / SAMPLE_RATE
 
-        i_ref = (i_ref * scaling).reshape(-1, 2)
+        # i_ref = (i_ref * scaling).reshape(-1, 2)
+        i_ref = (i_ref).reshape(-1, 2)
         p_ref = np.array([midi_to_hz(MIN_MIDI + midi) for midi in p_ref])
-        i_est = (i_est * scaling).reshape(-1, 2)
+        # i_est = (i_est * scaling).reshape(-1, 2)
+        i_est = (i_est).reshape(-1, 2)
         p_est = np.array([midi_to_hz(MIN_MIDI + midi) for midi in p_est])
 
         t_ref = t_ref.astype(np.float64) * scaling

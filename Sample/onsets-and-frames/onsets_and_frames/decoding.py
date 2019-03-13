@@ -50,34 +50,40 @@ def extract_notes(onsets, frames, velocity, onset_threshold=0.5, frame_threshold
 
     return np.array(pitches), np.array(intervals), np.array(velocities)
 
-# def extract_notes_time(onset_times, offset_times, frames, velocity, frame_threshold=0.5):
-#     frames = (frames > frame_threshold).cpu()
-#     onset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == 1
-#     offset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == -1
+def extract_notes_time(onset_times, offset_times, frames, velocity, frame_threshold=0.5):
+    frames = (frames > frame_threshold).cpu()
+    onset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == 1
+    offset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == -1
 
-#     pitches = []
-#     intervals = []
-#     velocities = []
+    frames_onset = []
+    pitches_onset = []
+    for nonzero_onset in onset_diff.nonzero():
+        frames_onset.append(nonzero_onset[0].item())
+        pitches_onset.append(nonzero_onset[1].item())
 
-#     frames_onset = []
-#     pitches_onset = []
-#     for nonzero_onset in onset_diff.nonzero():
-#         frames_onset.append(nonzero_onset[0].item())
-#         pitches_onset.append(nonzero_onset[1].item())
+    frames_offset = {}
+    for nonzero_offset in offset_diff.nonzero():
+        frame_offset = nonzero_offset[0].item()
+        pitch = nonzero_offset[1].item()
+        pitch_offset_frame_list = frames_offset.get(pitch, [])
+        pitch_offset_frame_list.append(frame_offset)
+        frames_offset[pitch] = pitch_offset_frame_list
 
-#     frames_offset = []
-#     pitches_offset = []
-#     for nonzero_offset in offset_diff.nonzero():
-#         frames_offset.append(nonzero_offset[0].item())
-#         pitches_offset.append(nonzero_offset[1].item())
+    pitches = []
+    intervals = []
+    velocities = []
+    for pitch, frame_onset in zip(pitches_onset, frames_onset):
+        pitch_offset_frame_list = frames_offset.get(pitch, [])
+        if len(pitch_offset_frame_list) == 0:
+            frame_offset = 625-1
+        else:
+            frame_offset = pitch_offset_frame_list.pop(0)
+            frames_offset[pitch] = pitch_offset_frame_list
+        pitches.append(pitch)
+        intervals.append([onset_times[frame_onset], offset_times[frame_offset]])
+        velocities.append(velocity[frame_onset, pitch])
 
-    
-
-
-
-
-
-
+    return np.array(pitches), np.array(s), np.array(velocities)
 
 
 def notes_to_frames(pitches, intervals, shape):
@@ -96,7 +102,9 @@ def notes_to_frames(pitches, intervals, shape):
     freqs: list of np.ndarray, each containing the frequency bin indices
     """
     roll = np.zeros(tuple(shape))
-    for pitch, (onset, offset) in zip(pitches, intervals):
+    for pitch, (onset_time, offset_time) in zip(pitches, intervals):
+        onset = min(625-1, int(onset_time * 31.25))
+        offset = min(625-1, int(offset_time * 31.25))
         roll[onset:offset, pitch] = 1
 
     time = np.arange(roll.shape[0])
