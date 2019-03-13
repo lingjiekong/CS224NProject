@@ -11,6 +11,8 @@ class BiLSTMA(nn.Module):
         self.rnn = nn.LSTM(input_features, recurrent_features, batch_first=True, bidirectional=True)
         self.att_projection1 = nn.Linear(recurrent_features * 2, recurrent_features *2 , bias=False) 
         self.att_projection2 = nn.Linear(recurrent_features * 2, recurrent_features *2, bias=False) 
+        self.att_projection_out_1 = nn.Linear(recurrent_features * 2, recurrent_features *2 , bias=False)
+        self.att_projection_out_2 = nn.Linear(recurrent_features * 2, recurrent_features *2, bias=False)
 
     def forward(self, x):
         if self.training:
@@ -57,6 +59,7 @@ class BiLSTMA(nn.Module):
                 end = start + self.inference_chunk_length
                 output[:, start:end, :], (h, c) = self.rnn(x[:, start:end, :], (h, c))
 
+
             # reverse direction
             if self.rnn.bidirectional:
                 h.zero_()
@@ -67,4 +70,14 @@ class BiLSTMA(nn.Module):
                     result, (h, c) = self.rnn(x[:, start:end, :], (h, c))
                     output[:, start:end, hidden_size:] = result[:, :, hidden_size:]
 
-            return output
+            out_proj1 = self.att_projection_out_1(output)
+            out_proj2 = self.att_projection_out_2(output)
+            out_transpose = torch.transpose(out_proj2, 1,2)
+            out_attention_matrix = torch.bmm(out_proj1,out_transpose)
+            out_attention_score_matrix = F.softmax(out_attention_matrix,dim = -1)
+            out_hidden_matrix_t = torch.bmm(out_transpose, torch.transpose(out_attention_score_matrix,1,2))
+            out_hidden_matrix = torch.transpose(out_hidden_matrix_t,1,2)
+            final_out_matrix = torch.cat((out_hidden_matrix,output),2)
+            return final_out_matrix
+
+            # return output
