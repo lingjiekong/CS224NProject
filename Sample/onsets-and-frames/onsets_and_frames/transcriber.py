@@ -98,7 +98,7 @@ class OnsetsAndFrames(nn.Module):
 
         # onset_pred = self.onset_stack(mel)
         # offset_pred = self.offset_stack(mel)
-        oneset_pred = None
+        onset_pred = None
         offset_pred = None
         activation_pred = self.frame_stack(mel)
         # combined_pred = torch.cat([onset_pred.detach(), offset_pred.detach(), activation_pred], dim=-1)
