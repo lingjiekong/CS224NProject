@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-def extract_notes(onsets, frames, velocity, onset_threshold=0.5, frame_threshold=0.5):
+def extract_notes(frames, velocity, onset_threshold=0.5, frame_threshold=0.5):
     """
     Finds the note timings based on the onsets and frames information
 
