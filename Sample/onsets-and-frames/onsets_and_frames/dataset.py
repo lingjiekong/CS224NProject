@@ -138,10 +138,12 @@ class MAESTRO(PianoRollAudioDataset):
         metadata = json.load(open(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', 'maestro-v1.0.0.json')))
         # files = sorted([(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['audio_filename'].replace('.wav', '.flac')),
         #                  os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['midi_filename'])) 
-        # 										for row in metadata if (row['split'] == group and row['canonical_composer'] == 'Wolfgang Amadeus Mozart') ])
+        #                                         for row in metadata if (row['split'] == group and row['canonical_composer'] == 'Wolfgang Amadeus Mozart') ])
+        downsize_factor = 4
+
         files = sorted([(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['audio_filename'].replace('.wav', '.flac')),
                          os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['midi_filename'])) 
-        										for row in metadata if row['split'] == group])
+                            for ii, row in enumerate(metadata) if (row['split'] == group and ii % downsize_factor == 0)])
         files = [(audio if os.path.exists(audio) else audio.replace('.flac', '.wav'), midi) for audio, midi in files]
 
         result = []
