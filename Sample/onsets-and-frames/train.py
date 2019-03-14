@@ -45,7 +45,7 @@ def config():
     clip_gradient_norm = 3
 
     validation_length = 320000
-    validation_interval = 500
+    validation_interval = 20 # 500
 
     ex.observers.append(FileStorageObserver.create(logdir))
 

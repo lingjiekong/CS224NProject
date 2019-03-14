@@ -79,14 +79,14 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
         for key, loss in frame_metrics.items():
             metrics['metric/frame/' + key.lower().replace(' ', '_')].append(loss)
 
-        if save_path is not None:
-            os.makedirs(save_path, exist_ok=True)
-            label_path = os.path.join(save_path, os.path.basename(label['path']) + '.label.png')
-            save_pianoroll(label_path, label['onset'], label['frame'])
-            pred_path = os.path.join(save_path, os.path.basename(label['path']) + '.pred.png')
-            save_pianoroll(pred_path, pred['onset'], pred['frame'])
-            midi_path = os.path.join(save_path, os.path.basename(label['path']) + '.pred.mid')
-            save_midi(midi_path, p_est, i_est, v_est)
+        # if save_path is not None:
+        #     os.makedirs(save_path, exist_ok=True)
+        #     label_path = os.path.join(save_path, os.path.basename(label['path']) + '.label.png')
+        #     save_pianoroll(label_path, label['onset'], label['frame'])
+        #     pred_path = os.path.join(save_path, os.path.basename(label['path']) + '.pred.png')
+        #     save_pianoroll(pred_path, pred['onset'], pred['frame'])
+        #     midi_path = os.path.join(save_path, os.path.basename(label['path']) + '.pred.mid')
+        #     save_midi(midi_path, p_est, i_est, v_est)
 
     return metrics
 
