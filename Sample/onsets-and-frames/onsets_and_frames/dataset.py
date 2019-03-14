@@ -139,7 +139,7 @@ class MAESTRO(PianoRollAudioDataset):
         # files = sorted([(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['audio_filename'].replace('.wav', '.flac')),
         #                  os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['midi_filename'])) 
         #                                         for row in metadata if (row['split'] == group and row['canonical_composer'] == 'Wolfgang Amadeus Mozart') ])
-        downsize_factor = 2
+        downsize_factor = 4
 
         files = sorted([(os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['audio_filename'].replace('.wav', '.flac')),
                          os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'CS224NProject', 'Sample', 'onsets-and-frames', 'data', 'MAESTRO', row['midi_filename'])) 

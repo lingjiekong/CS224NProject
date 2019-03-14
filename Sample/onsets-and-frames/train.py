@@ -67,7 +67,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    iterations = math.ceil(len(dataset) * 1000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
+    iterations = math.ceil(len(dataset) * 4000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
     # print(iterations)
 
 
