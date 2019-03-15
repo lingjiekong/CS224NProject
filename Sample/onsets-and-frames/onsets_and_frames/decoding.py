@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-def extract_notes(frames, velocity, onset_threshold=0.5, frame_threshold=0.5):
+def extract_notes(frames, velocity, onset_threshold=0.5, frame_threshold=0.25):
     """
     Finds the note timings based on the onsets and frames information
 
@@ -20,7 +20,6 @@ def extract_notes(frames, velocity, onset_threshold=0.5, frame_threshold=0.5):
     intervals: np.ndarray of rows containing (onset_index, offset_index)
     velocities: np.ndarray of velocity values
     """
-    print(frames.nonzero())
     frames = (frames > frame_threshold).cpu()
     onset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == 1
 
@@ -47,8 +46,6 @@ def extract_notes(frames, velocity, onset_threshold=0.5, frame_threshold=0.5):
             pitches.append(pitch)
             intervals.append([onset, offset])
             velocities.append(np.mean(velocity_samples) if len(velocity_samples) > 0 else 0)
-
-    print (len(pitches), len(intervals), len(velocities))
     return np.array(pitches), np.array(intervals), np.array(velocities)
 
 
