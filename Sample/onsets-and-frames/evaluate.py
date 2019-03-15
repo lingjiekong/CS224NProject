@@ -22,7 +22,7 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
 
     for label in data:
         mel = melspectrogram(label['audio'].reshape(-1, label['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
-        pred, losses = model.run_on_batch(label, mel)
+        pred, losses = model.module.run_on_batch(label, mel)
 
         for key, loss in losses.items():
             metrics[key].append(loss.item())
@@ -54,17 +54,11 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
         metrics['metric/note/f1'].append(f)
         metrics['metric/note/overlap'].append(o)
 
-        # print("#################################################")
-        # print("------- note -------")
-        # print(p, r, f, o, sep=", ")
-
         p, r, f, o = evaluate_notes(i_ref, p_ref, i_est, p_est)
         metrics['metric/note-with-offsets/precision'].append(p)
         metrics['metric/note-with-offsets/recall'].append(r)
         metrics['metric/note-with-offsets/f1'].append(f)
         metrics['metric/note-with-offsets/overlap'].append(o)
-        # print("------- note-with-offsets -------")
-        # print(p, r, f, o, sep=", ")
 
         p, r, f, o = evaluate_notes_with_velocity(i_ref, p_ref, v_ref, i_est, p_est, v_est,
                                                   offset_ratio=None, velocity_tolerance=0.1)
@@ -72,16 +66,12 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
         metrics['metric/note-with-velocity/recall'].append(r)
         metrics['metric/note-with-velocity/f1'].append(f)
         metrics['metric/note-with-velocity/overlap'].append(o)
-        # print("------- note-with-velocity -------")
-        # print(p, r, f, o, sep=", ")
 
         p, r, f, o = evaluate_notes_with_velocity(i_ref, p_ref, v_ref, i_est, p_est, v_est, velocity_tolerance=0.1)
         metrics['metric/note-with-offsets-and-velocity/precision'].append(p)
         metrics['metric/note-with-offsets-and-velocity/recall'].append(r)
         metrics['metric/note-with-offsets-and-velocity/f1'].append(f)
         metrics['metric/note-with-offsets-and-velocity/overlap'].append(o)
-        # print("------- note-with-offsets-and-velocity -------")
-        # print(p, r, f, o, sep=", ")
 
         frame_metrics = evaluate_frames(t_ref, f_ref, t_est, f_est)
         metrics['metric/frame/f1'] = hmean([frame_metrics['Precision'] + eps, frame_metrics['Recall'] + eps]) - eps
@@ -129,7 +119,7 @@ if __name__ == '__main__':
     parser.add_argument('--sequence-length', default=None, type=int)
     parser.add_argument('--onset-threshold', default=0.5, type=float)
     parser.add_argument('--frame-threshold', default=0.5, type=float)
-    parser.add_argument('--device', default='cuda:2' if torch.cuda.is_available() else 'cpu')
+    parser.add_argument('--device', default='cuda:0' if torch.cuda.is_available() else 'cpu')
 
     with torch.no_grad():
         evaluate_file(**vars(parser.parse_args()))
