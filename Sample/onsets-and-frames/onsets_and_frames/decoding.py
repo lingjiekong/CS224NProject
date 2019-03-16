@@ -53,7 +53,7 @@ def extract_notes(onsets, frames, velocity, onset_threshold=0.5, frame_threshold
 def extract_notes_time(onset_times, offset_times, frames, velocity, frame_threshold=0.25):
     frames = (frames > frame_threshold).cpu()
     onset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == 1
-    offset_diff = torch.cat([frames[:1, :], frames[1:, :] - frames[:-1, :]], dim=0) == -1
+    offset_diff = torch.cat([frames[:1, :], -(frames[1:, :] - frames[:-1, :])], dim=0) == 1
 
     frames_onset = []
     pitches_onset = []
