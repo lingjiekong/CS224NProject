@@ -55,7 +55,7 @@ class PianoRollAudioDataset(Dataset):
         result['audio'] = result['audio'].float().div_(32768.0)
         result['onset'] = (result['label'] == 3).float()
         result['offset'] = (result['label'] == 1).float()
-        result['frame'] = (result['label'] > 0).float()
+        result['frame'] = (result['label'] > 1).float()
         result['velocity'] = result['velocity'].float().div_(128.0)
         result['onset_time'] = result['onset_time'].float()
         result['offset_time'] = result['offset_time'].float()
@@ -139,7 +139,7 @@ class PianoRollAudioDataset(Dataset):
             label[frame_right:offset_right, f] = 1
             velocity[left:frame_right, f] = vel
             onset_time[left:frame_right, f] = onset%time_interval
-            offset_time[left:frame_right, f] = offset%time_interval
+            offset_time[left:offset_right, f] = offset%time_interval
 
         data = dict(path=audio_path, audio=audio, label=label, velocity=velocity, onset_time=onset_time, offset_time=offset_time)
         torch.save(data, saved_data_path)
