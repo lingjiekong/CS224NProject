@@ -112,7 +112,7 @@ class PianoRollAudioDataset(Dataset):
         n_keys = MAX_MIDI - MIN_MIDI + 1
         n_steps = (audio_length - 1) // HOP_LENGTH + 1
 
-        label = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
+        label = torch.zeros(n_steps, n_keys, dtype=torch.int8)
         velocity = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
         onset_time = torch.zeros(n_steps, n_keys, dtype=torch.float)
         offset_time = torch.zeros(n_steps, n_keys, dtype=torch.float)
