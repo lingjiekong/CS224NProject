@@ -41,7 +41,7 @@ def config():
     clip_gradient_norm = 3
 
     validation_length = 320000
-    validation_interval = 10
+    validation_interval = 500
 
     ex.observers.append(FileStorageObserver.create(logdir))
 
@@ -83,7 +83,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     hist_valid_scores = []
     patience, num_trial = 0, 0
-    max_patience, max_trial = 5, 5 
+    max_patience, max_trial = 10, 10 
 
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
     for i, batch in zip(loop, cycle(loader)):
@@ -131,6 +131,6 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                     print('hit #%d trial' % num_trial, file=sys.stderr)
                     if num_trial == max_trial:
                         print('early stop!', file=sys.stderr)
-                        exit(0)
+                        break
                     # reset patience
                     patience = 0
