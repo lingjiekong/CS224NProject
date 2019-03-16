@@ -134,9 +134,10 @@ class PianoRollAudioDataset(Dataset):
             offset_right = min(n_steps, frame_right + HOPS_IN_OFFSET)
 
             f = int(note) - MIN_MIDI
-            label[left:onset_right, f] = 3
-            label[onset_right:frame_right, f] = 2
-            label[frame_right:offset_right, f] = 1
+            # label[left:onset_right, f] = 3
+            # label[onset_right:frame_right, f] = 2
+            # label[frame_right:offset_right, f] = 1
+            label[left:offset_right] = 1
             velocity[left:frame_right, f] = vel
             onset_time[left:frame_right, f] = onset%time_interval
             offset_time[left:frame_right, f] = offset%time_interval
