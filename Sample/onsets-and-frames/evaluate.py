@@ -16,6 +16,13 @@ from onsets_and_frames import *
 
 eps = sys.float_info.epsilon
 
+class WrappedModel(torch.nn.Module):
+    def __init__(self, module):
+        super(WrappedModel, self).__init__()
+        self.module = module # that I actually define.
+    def forward(self, x):
+        return self.module(x)
+
 
 def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=None):
     metrics = defaultdict(list)

@@ -19,6 +19,7 @@ class PianoRollAudioDataset(Dataset):
         self.groups = groups if groups is not None else self.available_groups()
         assert all(group in self.available_groups() for group in self.groups)
         self.sequence_length = sequence_length
+        
         self.device = device
         self.random = np.random.RandomState(seed)
 
