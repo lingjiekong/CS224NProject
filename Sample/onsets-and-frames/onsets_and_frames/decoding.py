@@ -81,6 +81,7 @@ def extract_notes_time(onset_times, offset_times, frames, velocity, frame_thresh
             frames_offset[pitch] = pitch_offset_frame_list
         pitches.append(pitch)
         intervals.append([onset_times[frame_onset][pitch], offset_times[frame_offset][pitch]])
+        print (onset_times[frame_onset][pitch], offset_times[frame_offset][pitch])
         velocities.append(velocity[frame_onset, pitch])
 
     return np.array(pitches), np.array(intervals), np.array(velocities)
