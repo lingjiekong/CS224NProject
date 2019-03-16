@@ -55,7 +55,7 @@ class PianoRollAudioDataset(Dataset):
         result['audio'] = result['audio'].float().div_(32768.0)
         result['onset'] = (result['label'] == 3).float()
         result['offset'] = (result['label'] == 1).float()
-        result['frame'] = (result['label'] > 1).float()
+        result['frame'] = (result['label'] > 0).float()
         result['velocity'] = result['velocity'].float().div_(128.0)
         result['onset_time'] = result['onset_time'].float()
         result['offset_time'] = result['offset_time'].float()
@@ -134,10 +134,9 @@ class PianoRollAudioDataset(Dataset):
             offset_right = min(n_steps, frame_right + HOPS_IN_OFFSET)
 
             f = int(note) - MIN_MIDI
-            # label[left:onset_right, f] = 3
-            # label[onset_right:frame_right, f] = 2
-            # label[frame_right:offset_right, f] = 1
-            label[left:offset_right] = 1
+            label[left:onset_right, f] = 3
+            label[onset_right:frame_right, f] = 2
+            label[frame_right:offset_right, f] = 1
             velocity[left:frame_right, f] = vel
             onset_time[left:frame_right, f] = onset%time_interval
             offset_time[left:frame_right, f] = offset%time_interval
