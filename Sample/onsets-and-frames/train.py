@@ -67,7 +67,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
 
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
-    iterations = math.ceil(len(dataset) * 1000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
+    iterations = math.ceil(len(dataset) * 4000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
     # print(iterations)
 
 
@@ -128,8 +128,8 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
                     if (key == 'metric/note-with-offsets-and-velocity/f1'):
                         # dev_value = np.mean(value)
-                    	count += 1.0
-                    	values += np.mean(value)
+                        count += 1.0
+                        values += np.mean(value)
                 dev_value = values/count
                 print('training loss: %.8f;  validation accuracy: %.8f' % (loss[0], dev_value))
             is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
