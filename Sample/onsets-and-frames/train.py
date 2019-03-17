@@ -30,7 +30,7 @@ def config():
     checkpoint_interval = 1000
 
     batch_size = 8
-    sequence_length = 327680
+    sequence_length = 16000 # 327680
     model_complexity = 16
 
     if torch.cuda.is_available() and torch.cuda.get_device_properties(torch.cuda.current_device()).total_memory < 10e9:
@@ -44,7 +44,7 @@ def config():
 
     clip_gradient_norm = 3
 
-    validation_length = 320000
+    validation_length = 16000 #320000
     validation_interval = 500
 
     ex.observers.append(FileStorageObserver.create(logdir))
@@ -59,7 +59,8 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     os.makedirs(logdir, exist_ok=True)
     writer = SummaryWriter(logdir)
 
-    dataset = MAESTRO(sequence_length=sequence_length)
+    # dataset = MAESTRO(sequence_length=sequence_length)
+    dataset = TIMIT(groups=['train'], sequence_length=sequence_length)
     # dataset = MAPS(groups=['AkPnBcht', 'AkPnBsdf', 'AkPnCGdD', 'AkPnStgb', 'ENSTDkAm', 'ENSTDkCl', 'SptkBGAm'], 
                   # sequence_length=sequence_length)
     # dataset = MAPS(groups=['AkPnBcht'], 
@@ -71,7 +72,8 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     # print(iterations)
 
 
-    validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
+    # validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
+    validation_dataset = TIMIT(groups=['validation'], sequence_length=sequence_length)
     # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
                               # sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl'],
@@ -100,7 +102,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     max_patience, max_trial = 10, 10 
 
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
-    for i, batch in zip(loop, cycle(loader)):
+    for i, batch in zipzip(loop, cycle(loader)):
         scheduler.step()
 
         mel = melspectrogram(batch['audio'].reshape(-1, batch['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
@@ -126,7 +128,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                 count, values = 0.0, 0.0
                 for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
-                    if (key == 'metric/note-with-offsets-and-velocity/f1'):
+                    if (key == 'metric/note-with-offsets/f1'):
                         # dev_value = np.mean(value)
                     	count += 1.0
                     	values += np.mean(value)

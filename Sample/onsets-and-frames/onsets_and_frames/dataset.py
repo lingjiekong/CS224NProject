@@ -43,17 +43,17 @@ class PianoRollAudioDataset(Dataset):
 
             result['audio'] = data['audio'][begin:end].to(self.device)
             result['label'] = data['label'][step_begin:step_end, :].to(self.device)
-            result['velocity'] = data['velocity'][step_begin:step_end, :].to(self.device)
+            # result['velocity'] = data['velocity'][step_begin:step_end, :].to(self.device)
         else:
             result['audio'] = data['audio'].to(self.device)
             result['label'] = data['label'].to(self.device)
-            result['velocity'] = data['velocity'].to(self.device).float()
+            # result['velocity'] = data['velocity'].to(self.device).float()
 
         result['audio'] = result['audio'].float().div_(32768.0)
         result['onset'] = (result['label'] == 3).float()
         result['offset'] = (result['label'] == 1).float()
         result['frame'] = (result['label'] > 1).float()
-        result['velocity'] = result['velocity'].float().div_(128.0)
+        # result['velocity'] = result['velocity'].float().div_(128.0)
 
         return result
 
@@ -89,8 +89,8 @@ class PianoRollAudioDataset(Dataset):
                 a matrix that contains MIDI velocity values at the frame locations
         """
         saved_data_path = audio_path.replace('.flac', '.pt').replace('.wav', '.pt')
-        if os.path.exists(saved_data_path):
-            return torch.load(saved_data_path)
+        # if os.path.exists(saved_data_path):
+        #     return torch.load(saved_data_path)
 
         audio, sr = soundfile.read(audio_path, dtype='int16')
         assert sr == SAMPLE_RATE
@@ -102,12 +102,12 @@ class PianoRollAudioDataset(Dataset):
         n_steps = (audio_length - 1) // HOP_LENGTH + 1
 
         label = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
-        velocity = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
+        # velocity = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
 
         tsv_path = tsv_path
-        midi = np.loadtxt(tsv_path, delimiter='\t', skiprows=1)
+        midi = np.loadtxt(tsv_path, delimiter=' ', skiprows=1)
 
-        for onset, offset, note, vel in midi:
+        for onset, offset, note in midi:
             left = int(round(onset * SAMPLE_RATE / HOP_LENGTH))
             onset_right = min(n_steps, left + HOPS_IN_ONSET)
             frame_right = int(round(offset * SAMPLE_RATE / HOP_LENGTH))
@@ -118,9 +118,8 @@ class PianoRollAudioDataset(Dataset):
             label[left:onset_right, f] = 3
             label[onset_right:frame_right, f] = 2
             label[frame_right:offset_right, f] = 1
-            velocity[left:frame_right, f] = vel
 
-        data = dict(path=audio_path, audio=audio, label=label, velocity=velocity)
+        data = dict(path=audio_path, audio=audio, label=label)#, velocity=velocity)
         torch.save(data, saved_data_path)
         return data
 
@@ -146,6 +145,7 @@ class MAESTRO(PianoRollAudioDataset):
                             for ii, row in enumerate(metadata) if (row['split'] == group and ii % downsize_factor == 0)])
         files = [(audio if os.path.exists(audio) else audio.replace('.flac', '.wav'), midi) for audio, midi in files]
 
+
         result = []
         for audio_path, midi_path in files:
             tsv_filename = midi_path.replace('.midi', '.tsv').replace('.mid', '.tsv')
@@ -153,6 +153,7 @@ class MAESTRO(PianoRollAudioDataset):
                 midi = parse_midi(midi_path)
                 np.savetxt(tsv_filename, midi, fmt='%.6f', delimiter='\t', header='onset,offset,note,velocity')
             result.append((audio_path, tsv_filename))
+        # print(result)
         return result
 
 
@@ -172,3 +173,39 @@ class MAPS(PianoRollAudioDataset):
         assert(all(os.path.isfile(tsv) for tsv in tsvs))
 
         return sorted(zip(flacs, tsvs))
+
+class TIMIT(PianoRollAudioDataset):
+    def __init__(self, path='', groups=None, sequence_length=None, seed=42, device=DEFAULT_DEVICE):
+        super().__init__(path, groups if groups is not None else ['train'], sequence_length, seed, device)
+
+    @classmethod
+    def available_groups(cls):
+        return ['train', 'validation', 'test']
+
+    def files(self, group):
+        this_path = ''
+        p2i_extention = ''
+        if group == 'train':
+            this_path = os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'datasets', 'timit', group)
+            p2i_extention = '.p2i'
+        elif group == 'validation':
+            this_path = os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'datasets', 'timit', 'test')
+            p2i_extention = '.p2iv'
+        elif group == 'test':
+            this_path = os.path.join(os.path.sep, 'home', 'lab', 'Documents', 'datasets', 'timit', group)
+            p2i_extention = '.p2it'
+        else:
+            print('group error')
+            exit(0)
+
+        result = []
+        for root, groups, files in os.walk(this_path):
+            if root.startswith(this_path) and len(root) > len(this_path)+4:
+                for name in files:                                  # loop through the directory for all .phn files
+                    if name.endswith(p2i_extention):
+                        p2i_file = root + os.path.sep + name
+                        wav_file = root + os.path.sep + name.replace(p2i_extention, '.wav')
+                        result.append((wav_file, p2i_file))
+        # print(result)
+        return result
+
