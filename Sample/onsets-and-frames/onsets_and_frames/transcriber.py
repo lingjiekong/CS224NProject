@@ -142,7 +142,7 @@ class OnsetsAndFrames(nn.Module):
 
 
     def velocity_loss(self, velocity_pred, velocity_label, onset_label):
-        # denominator = onset_label.sum()
+        denominator = onset_label.sum()
         if denominator.item() == 0:
             return denominator
         else:
