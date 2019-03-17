@@ -130,7 +130,7 @@ class OnsetsAndFrames(nn.Module):
         return ((onset_label_time - onset_pred_time) ** 2).sum() / denominator
 
 
-    def offset_time_loss(self, offset_pred_time, offset_label_time, offset_label, device=cuda):
+    def offset_time_loss(self, offset_pred_time, offset_label_time, offset_label):
         # denominator = offset_label.sum()
         batch, row, col = offset_pred_time.size()
         denominator = torch.tensor(batch*row*col, dtype=torch.float, device=cuda)
