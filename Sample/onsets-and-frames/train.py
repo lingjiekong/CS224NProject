@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+import sys
+import math
 
 import numpy as np
 from sacred import Experiment
@@ -13,8 +15,6 @@ from tqdm import tqdm
 
 from evaluate import evaluate
 from onsets_and_frames import *
-
-import sys
 
 ex = Experiment('train_transcriber')
 
@@ -64,6 +64,10 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     #               sequence_length=sequence_length)
     loader = DataLoader(dataset, batch_size, shuffle=True)
 
+    iterations = math.ceil(len(dataset) * 4000 / batch_size / checkpoint_interval) * checkpoint_interval # make sure smaller datasets have less iterations
+    # print(iterations)
+
+
     validation_dataset = MAESTRO(groups=['validation'], sequence_length=validation_length)
     # validation_dataset = MAPS(groups=['SptkBGCl', 'StbgTGd2'],
     #                           sequence_length=validation_length)
@@ -71,7 +75,11 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     #                           sequence_length=validation_length)
 
     if resume_iteration is None:
-        model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity).to(device)
+        model = OnsetsAndFrames(N_MELS, MAX_MIDI - MIN_MIDI + 1, model_complexity)
+        if torch.cuda.device_count() > 1:
+            model = torch.nn.DataParallel(model, device_ids=[0, 2])
+        model.to(device)
+
         optimizer = torch.optim.Adam(model.parameters(), learning_rate)
         resume_iteration = 0
     else:
@@ -92,7 +100,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
         scheduler.step()
 
         mel = melspectrogram(batch['audio'].reshape(-1, batch['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
-        predictions, losses = model.run_on_batch(batch, mel)
+        predictions, losses = model.module.run_on_batch(batch, mel)
 
         loss = sum(losses.values())
         optimizer.zero_grad()
@@ -113,10 +121,12 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                 count, values = 0.0, 0.0
                 for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
-                    if key == 'metric/note-with-offsets-and-velocity/f1':
-                        count += 1.0
-                        values += np.mean(value)
+                    if (key == 'metric/note-with-offsets-and-velocity/f1'):
+                        # dev_value = np.mean(value)
+                    	count += 1.0
+                    	values += np.mean(value)
                 dev_value = values/count
+                print('training loss: %.8f;  validation accuracy: %.8f' % (loss[0], dev_value))
             is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
             hist_valid_scores.append(dev_value)
             model.train()

@@ -22,7 +22,7 @@ def evaluate(data, model, onset_threshold=0.5, frame_threshold=0.5, save_path=No
 
     for label in data:
         mel = melspectrogram(label['audio'].reshape(-1, label['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
-        pred, losses = model.run_on_batch(label, mel)
+        pred, losses = model.module.run_on_batch(label, mel)
 
         for key, loss in losses.items():
             metrics[key].append(loss.item())
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--sequence-length', default=None, type=int)
     parser.add_argument('--onset-threshold', default=0.5, type=float)
     parser.add_argument('--frame-threshold', default=0.5, type=float)
-    parser.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
+    parser.add_argument('--device', default='cuda:0' if torch.cuda.is_available() else 'cpu')
 
     with torch.no_grad():
         evaluate_file(**vars(parser.parse_args()))
