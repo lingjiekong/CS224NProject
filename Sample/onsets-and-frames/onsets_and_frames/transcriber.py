@@ -127,8 +127,8 @@ class OnsetsAndFrames(nn.Module):
         if denominator.item() == 0:
             return denominator
         else:
-            return (onset_label * (onset_label_time - onset_pred_time) ** 2).sum() / denominator
-            # return ((onset_label_time - onset_pred_time) ** 2).sum() / denominator
+            # return (onset_label * (onset_label_time - onset_pred_time) ** 2).sum() / denominator
+            return ((onset_label_time - onset_pred_time) ** 2).sum() / denominator
 
 
     def offset_time_loss(self, offset_pred_time, offset_label_time, offset_label):
@@ -136,8 +136,8 @@ class OnsetsAndFrames(nn.Module):
         if denominator.item() == 0:
             return denominator
         else:
-            return (offset_label * (offset_label_time - offset_pred_time) ** 2).sum() / denominator
-            # return ((offset_label_time - offset_pred_time) ** 2).sum() / denominator
+            # return (offset_label * (offset_label_time - offset_pred_time) ** 2).sum() / denominator
+            return ((offset_label_time - offset_pred_time) ** 2).sum() / denominator
 
 
 
