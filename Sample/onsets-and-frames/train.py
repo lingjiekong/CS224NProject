@@ -29,7 +29,7 @@ def config():
     resume_iteration = None
     checkpoint_interval = 1000
 
-    batch_size = 4
+    batch_size = 2
     sequence_length = 327680
     model_complexity = 16
 
