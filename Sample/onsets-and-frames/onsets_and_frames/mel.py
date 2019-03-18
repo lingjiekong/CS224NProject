@@ -27,7 +27,6 @@ class STFT(torch.nn.Module):
                                    np.imag(fourier_basis[:cutoff, :])])
 
         forward_basis = torch.FloatTensor(fourier_basis[:, None, :])
-
         if window is not None:
             assert(filter_length >= win_length)
             # get window and zero center pad it to filter_length

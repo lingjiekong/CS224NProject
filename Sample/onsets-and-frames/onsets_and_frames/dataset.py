@@ -98,6 +98,7 @@ class PianoRollAudioDataset(Dataset):
         audio = torch.ShortTensor(audio)
         audio_length = len(audio)
 
+
         n_keys = MAX_MIDI - MIN_MIDI + 1
         n_steps = (audio_length - 1) // HOP_LENGTH + 1
 
@@ -105,7 +106,7 @@ class PianoRollAudioDataset(Dataset):
         # velocity = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
 
         tsv_path = tsv_path
-        midi = np.loadtxt(tsv_path, delimiter=' ', skiprows=1)
+        midi = np.loadtxt(tsv_path, delimiter='\t', skiprows=1)
 
         for onset, offset, note in midi:
             left = int(round(onset * SAMPLE_RATE / HOP_LENGTH))
@@ -197,15 +198,20 @@ class TIMIT(PianoRollAudioDataset):
         else:
             print('group error')
             exit(0)
-
+        downsize_factor = 32
+        counter = 0
         result = []
         for root, groups, files in os.walk(this_path):
             if root.startswith(this_path) and len(root) > len(this_path)+4:
-                for name in files:                                  # loop through the directory for all .phn files
+                for name in files: 
+                    # loop through the directory for all .phn files
                     if name.endswith(p2i_extention):
-                        p2i_file = root + os.path.sep + name
-                        wav_file = root + os.path.sep + name.replace(p2i_extention, '.wav')
-                        result.append((wav_file, p2i_file))
+                        if counter % downsize_factor == 0:
+                            p2i_file = root + os.path.sep + name
+                            wav_file = root + os.path.sep + name.replace(p2i_extention, '.wav')
+                            result.append((wav_file, p2i_file))
+                        counter += 1
+                        counter %= downsize_factor
         # print(result)
         return result
 
