@@ -27,6 +27,7 @@ class BiLSTM(nn.Module):
             slices = range(0, sequence_length, self.inference_chunk_length)
             for start in slices:
                 end = start + self.inference_chunk_length
+                self.rnn.flatten_parameters()
                 output[:, start:end, :], (h, c) = self.rnn(x[:, start:end, :], (h, c))
         
             # reverse direction
@@ -36,6 +37,7 @@ class BiLSTM(nn.Module):
                 
                 for start in reversed(slices):
                     end = start + self.inference_chunk_length
+                    self.rnn.flatten_parameters()
                     result, (h, c) = self.rnn(x[:, start:end, :], (h, c))
                     output[:, start:end, hidden_size:] = result[:, :, hidden_size:]
             
