@@ -105,7 +105,7 @@ class PianoRollAudioDataset(Dataset):
         # velocity = torch.zeros(n_steps, n_keys, dtype=torch.uint8)
 
         tsv_path = tsv_path
-        midi = np.loadtxt(tsv_path, delimiter=' ', skiprows=1)
+        midi = np.loadtxt(tsv_path, delimiter='\t', skiprows=1)
 
         for onset, offset, note in midi:
             left = int(round(onset * SAMPLE_RATE / HOP_LENGTH))

@@ -30,7 +30,7 @@ def config():
     checkpoint_interval = 1000
 
     batch_size = 8
-    sequence_length = 16000 # 327680
+    sequence_length = 8192 # 327680
     model_complexity = 16
 
     if torch.cuda.is_available() and torch.cuda.get_device_properties(torch.cuda.current_device()).total_memory < 10e9:
@@ -44,8 +44,8 @@ def config():
 
     clip_gradient_norm = 3
 
-    validation_length = 16000 #320000
-    validation_interval = 500
+    validation_length = 8192 #320000
+    validation_interval = 100
 
     ex.observers.append(FileStorageObserver.create(logdir))
 
@@ -102,7 +102,7 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
     max_patience, max_trial = 10, 10 
 
     loop = tqdm(range(resume_iteration + 1, iterations + 1))
-    for i, batch in zipzip(loop, cycle(loader)):
+    for i, batch in zip(loop, cycle(loader)):
         scheduler.step()
 
         mel = melspectrogram(batch['audio'].reshape(-1, batch['audio'].shape[-1])[:, :-1]).transpose(-1, -2)
@@ -128,14 +128,15 @@ def train(logdir, device, iterations, resume_iteration, checkpoint_interval, bat
                 count, values = 0.0, 0.0
                 for key, value in evaluate(validation_dataset, model).items():
                     writer.add_scalar('validation/' + key.replace(' ', '_'), np.mean(value), global_step=i)
-                    if (key == 'metric/note-with-offsets/f1'):
+                    if (key == 'metric/note/per'):
                         # dev_value = np.mean(value)
                     	count += 1.0
                     	values += np.mean(value)
                 dev_value = values/count
                 print('training loss: %.8f;  validation accuracy: %.8f' % (loss[0], dev_value))
-            is_better = len(hist_valid_scores) == 0 or dev_value > max(hist_valid_scores)
-            hist_valid_scores.append(dev_value)
+            is_better = len(hist_valid_scores) == 0 or -dev_value > max(hist_valid_scores)
+
+            hist_valid_scores.append(-dev_value)
             model.train()
 
             if is_better:
