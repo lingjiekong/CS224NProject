@@ -49,10 +49,11 @@ class ConvStack(nn.Module):
              nn.ReLU(),
              nn.Dropout(0.25),
         )
-        self.post = nn.Sequential(
-            nn.MaxPool2d((1, 2)),
-            nn.Dropout(0.25),
-        )
+        
+        # self.post = nn.Sequential(
+        #     nn.MaxPool2d((1, 2)),
+        #     nn.Dropout(0.25),
+        # )
         
         # highway
         self.conv2d = nn.Conv2d( output_features // 8, output_features // 8, (3, 3), padding=1)
@@ -61,6 +62,7 @@ class ConvStack(nn.Module):
         
         self.maxPool =  nn.MaxPool2d((1, 2))
         self.dropout = nn.Dropout(0.25)
+        
         self.fc = nn.Sequential(
             nn.Linear((output_features // 8) * (input_features // 4), output_features),
             nn.Dropout(0.5)
@@ -71,8 +73,8 @@ class ConvStack(nn.Module):
         x = self.cnn(x)
         # start the dilation
         dilation = self.cnn_dialation1(x) + self.cnn_dialation2(x) + self.cnn_dialation3(x)
-        x = self.post(dilation)
-        x = x.transpose(1, 2).flatten(-2)
+        # x = self.post(dilation)
+        # x = x.transpose(1, 2).flatten(-2)
         
         # start the highway
         x_conv_out = self.conv2d(x)
