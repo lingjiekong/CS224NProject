@@ -59,20 +59,20 @@ class OnsetsAndFrames(nn.Module):
         # also use BiLSTMA instead of BiLSTM
         self.onset_stack = nn.Sequential(
             ConvStack(input_features, fc_size),
-            BiLSTMA(fc_size, lstm_units),
-            nn.Linear(lstm_units * 4, output_features),
-            # BiLSTM(fc_size, lstm_units),
-            # nn.Linear(lstm_units * 2, output_features),
+            # BiLSTMA(fc_size, lstm_units),
+            # nn.Linear(lstm_units * 4, output_features),
+            BiLSTM(fc_size, lstm_units),
+            nn.Linear(lstm_units * 2, output_features),
             nn.Sigmoid()
         )
         # change the nn.Linear(lstm_units * 2, output_features) --> nn.Linear(lstm_units * 4, output_features) since uses attention on onset
         # also use BiLSTMA instead of BiLSTM
         self.offset_stack = nn.Sequential(
             ConvStack(input_features, fc_size),
-            BiLSTMA(fc_size, lstm_units),
-            nn.Linear(lstm_units * 4, output_features),
-            # BiLSTM(fc_size, lstm_units),
-            # nn.Linear(lstm_units * 2, output_features),
+            # BiLSTMA(fc_size, lstm_units),
+            # nn.Linear(lstm_units * 4, output_features),
+            BiLSTM(fc_size, lstm_units),
+            nn.Linear(lstm_units * 2, output_features),
             nn.Sigmoid()
         )
         self.frame_stack = nn.Sequential(
@@ -81,8 +81,10 @@ class OnsetsAndFrames(nn.Module):
             nn.Sigmoid()
         )
         self.combined_stack = nn.Sequential(
-            BiLSTM(output_features * 3, lstm_units),
-            nn.Linear(lstm_units * 2, output_features),
+            BiLSTMA(output_features * 3, lstm_units),
+            nn.Linear(lstm_units * 4, output_features),
+            # BiLSTM(output_features * 3, lstm_units),
+            # nn.Linear(lstm_units * 2, output_features),
             nn.Sigmoid()
         )
         self.velocity_stack = nn.Sequential(
