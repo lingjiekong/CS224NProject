@@ -14,7 +14,8 @@ from .lstm import BiLSTM
 class ConvStack(nn.Module):
     def __init__(self, input_features, output_features):
         super().__init__()
-
+        
+        # dilation first, highway secondS
         # input is batch_size * 1 channel * frames * input_features
         self.cnn = nn.Sequential(
             # layer 0
@@ -32,30 +33,36 @@ class ConvStack(nn.Module):
             nn.BatchNorm2d(output_features // 8),
             nn.ReLU(),
         )
-        
+        # dialtion
         self.cnn_dialation1 = nn.Sequential(
              nn.Conv2d(output_features // 8, output_features // 8, (3, 3), padding=1, bias = True),
              nn.ReLU(),
              nn.Dropout(0.25),
         )
-        
-                
         self.cnn_dialation2 = nn.Sequential(
              nn.Conv2d(output_features // 8, output_features // 8, (3, 3), padding=4,dilation=4, bias = True),
              nn.ReLU(),
              nn.Dropout(0.25),
         )
-        
         self.cnn_dialation3 = nn.Sequential(
              nn.Conv2d(output_features // 8, output_features // 8, (3, 3), padding=8,dilation=8, bias = True),
              nn.ReLU(),
              nn.Dropout(0.25),
         )
         
-        self.post = nn.Sequential(
-            nn.MaxPool2d((1, 2)),
-            nn.Dropout(0.25),
-        )
+        # self.post = nn.Sequential(
+        #     nn.MaxPool2d((1, 2)),
+        #     nn.Dropout(0.25),
+        # )
+        
+        # highway
+        self.conv2d = nn.Conv2d( output_features // 8, output_features // 8, (3, 3), padding=1)
+        self.projection = nn.Linear(in_features = input_features //2 , out_features = input_features //2 , bias= True)
+        self.gate_projection = nn.Linear(in_features = input_features // 2 , out_features = input_features //2, bias= True)
+        
+        self.maxPool =  nn.MaxPool2d((1, 2))
+        self.dropout = nn.Dropout(0.25)
+        
         self.fc = nn.Sequential(
             nn.Linear((output_features // 8) * (input_features // 4), output_features),
             nn.Dropout(0.5)
@@ -63,17 +70,22 @@ class ConvStack(nn.Module):
 
     def forward(self, mel):
         x = mel.view(mel.size(0), 1, mel.size(1), mel.size(2))
-        # print("Before cnn", end=" ")
-        # print(x.size())
-        
         x = self.cnn(x)
-
+        # start the dilation
         dilation = self.cnn_dialation1(x) + self.cnn_dialation2(x) + self.cnn_dialation3(x)
-        x = self.post(dilation)
-
-        x = x.transpose(1, 2).flatten(-2)
-        # print("Before fc", end=" ")
-        # print(x.size())
+        # x = self.post(dilation)
+        # x = x.transpose(1, 2).flatten(-2)
+        
+        # start the highway
+        x_conv_out = self.conv2d(x)
+        proj_hidden = self.projection(x_conv_out)
+        x_proj = F.relu(proj_hidden)
+        gate_hidden =  self.gate_projection(x_conv_out)
+        x_gate = F.softmax(gate_hidden,3)
+        x_highway = torch.mul(x_proj,x_gate) + torch.mul((1 - x_gate), x_conv_out)
+        x_maxPool =  self.maxPool( x_highway )
+        x_drpout = self.dropout(x_maxPool)
+        x = x_drpout.transpose(1, 2).flatten(-2)
         
         x = self.fc(x)
         # print("After fc", end=" ")
